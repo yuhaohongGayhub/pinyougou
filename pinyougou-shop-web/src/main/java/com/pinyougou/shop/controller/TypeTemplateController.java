@@ -22,6 +22,7 @@ public class TypeTemplateController {
         return typeTemplateService.findOne(id);
     }
 
+    /** 根据模板Id查询规格选项 */
     @GetMapping("findSpecByTemplateId")
     public List<Map> findSpecByTemplateId(@RequestParam(name = "id") Long id) {
         return typeTemplateService.findSpecByTemplateId(id);

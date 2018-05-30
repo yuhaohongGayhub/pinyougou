@@ -52,7 +52,7 @@
             <!--tab头/-->
             <!--tab内容-->
             <div class="tab-content">
-                {{goods}}
+                {{goods.items}}
                 <!--表单内容-->
                 <div class="tab-pane active" id="home">
                     <div class="row data-type">
@@ -203,26 +203,28 @@
                         </div>
                     </div>
                     <p>
+                        <!-- SPU -->
                     <div>
                         <div class="row data-type">
                             <div ng-repeat="spec in specList">
                                 <div class="col-md-2 title">{{spec.text}}</div>
                                 <div class="col-md-10 data">
                                     <span ng-repeat="option in spec.options">
-                                        <input type="checkbox">{{option.optionName}}
+                                        <input ng-click="updateSpecAttr($event, spec.text, option.optionName);createItems();"
+                                               type="checkbox">{{option.optionName}}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-
+                        <!-- SKU -->
                         <div class="row data-type">
-                            <table
-                                    class="table table-bordered table-striped table-hover dataTable">
+                            <table class="table table-bordered table-striped table-hover dataTable">
                                 <thead>
                                 <tr>
-                                    <th class="sorting">屏幕尺寸</th>
-                                    <th class="sorting">网络制式</th>
+                                    <th ng-repeat="spItem in goods.goodsDesc.specificationItems"
+                                        class="sorting">{{spItem.attributeName}}
+                                    </th>
                                     <th class="sorting">价格</th>
                                     <th class="sorting">库存</th>
                                     <th class="sorting">是否启用</th>
@@ -230,47 +232,30 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr>
-                                    <td>4.0</td>
-                                    <td>3G</td>
-                                    <td><input class="form-control" placeholder="价格">
+                                <!-- 遍历SKU -->
+                                <tr ng-repeat="option in goods.items">
+                                    <td ng-repeat="spItem in goods.goodsDesc.specificationItems">
+                                        {{option.spec[spItem.attributeName]}}
                                     </td>
-                                    <td><input class="form-control" placeholder="库存数量">
+                                    <td><input ng-model="option.price"
+                                               class="form-control" placeholder="价格">
                                     </td>
-                                    <td><input type="checkbox"></td>
-                                    <td><input type="checkbox"></td>
+                                    <td><input ng-model="option.num"
+                                               class="form-control" placeholder="库存数量">
+                                    </td>
+                                    <td>
+                                        <input ng-model="option.status"
+                                               ng-true-value="1"
+                                               ng-false-value="0"
+                                               ng-checked="item.status == 1"
+                                               type="checkbox">
+                                    </td>
+                                    <td><input ng-model="option.isDefault"
+                                               ng-checked="item.isDefault == 1"
+                                               ng-true-value="1"
+                                               ng-false-value="0"
+                                               type="checkbox"></td>
                                 </tr>
-                                <tr>
-                                    <td>4.0</td>
-                                    <td>4G</td>
-                                    <td><input class="form-control" placeholder="价格">
-                                    </td>
-                                    <td><input class="form-control" placeholder="库存数量">
-                                    </td>
-                                    <td><input type="checkbox"></td>
-                                    <td><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td>5.0</td>
-                                    <td>3G</td>
-                                    <td><input class="form-control" placeholder="价格">
-                                    </td>
-                                    <td><input class="form-control" placeholder="库存数量">
-                                    </td>
-                                    <td><input type="checkbox"></td>
-                                    <td><input type="checkbox"></td>
-                                </tr>
-                                <tr>
-                                    <td>5.0</td>
-                                    <td>4G</td>
-                                    <td><input class="form-control" placeholder="价格">
-                                    </td>
-                                    <td><input class="form-control" placeholder="库存数量">
-                                    </td>
-                                    <td><input type="checkbox"></td>
-                                    <td><input type="checkbox"></td>
-                                </tr>
-
                                 </tbody>
                             </table>
                         </div>
