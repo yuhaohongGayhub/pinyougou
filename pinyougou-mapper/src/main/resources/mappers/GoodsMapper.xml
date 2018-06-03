@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper PUBLIC 
-	"-//mybatis.org//DTD Mapper 3.0//EN" 
-	"http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.pinyougou.mapper.GoodsMapper" >
-  
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.pinyougou.mapper.GoodsMapper">
+    <select id="selectBySellerAndGoodsName" resultType="java.util.Map">
+        SELECT id,
+        goods_name AS goodsName,
+        price,
+        audit_status AS auditStatus,
+        category1_id AS category1Id,
+        category2_id AS category2Id,
+        category3_id category3Id FROM tb_goods
+        WHERE seller_id = #{sellerId}
+        <if test="goodsName != null and goodsName != ''">
+            AND goods_name LIKE CONCAT('%', #{goodsName} ,'%')
+        </if>
+        <if test="auditStatus != null and auditStatus != ''">
+            AND audit_status = #{auditStatus}
+        </if>
+        ORDER BY id DESC
+    </select>
 </mapper>

@@ -1,9 +1,15 @@
 package com.pinyougou.sellergoods.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.github.pagehelper.ISelect;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.pinyougou.common.pojo.PageResult;
 import com.pinyougou.mapper.*;
 import com.pinyougou.pojo.Goods;
+import com.pinyougou.pojo.GoodsDesc;
 import com.pinyougou.pojo.Item;
+import com.pinyougou.pojo.ItemCat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,6 +92,47 @@ public class GoodsServiceImpl implements GoodsService {
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public PageResult findGoodsByPage(Goods goods, Integer page, Integer rows) {
+        PageInfo<Map> pageInfo = PageHelper.startPage(page, rows).doSelectPageInfo(new ISelect() {
+            @Override
+            public void doSelect() {
+                goodsMapper.selectBySellerAndGoodsName(goods);
+            }
+        });
+        List<Map> list = pageInfo.getList();
+        for (Map map : list) {
+            ItemCat category1Id = itemCatMapper.selectByPrimaryKey(map.get("category1Id"));
+            ItemCat category2Id = itemCatMapper.selectByPrimaryKey(map.get("category2Id"));
+            ItemCat category3Id = itemCatMapper.selectByPrimaryKey(map.get("category3Id"));
+            map.put("category1Name", category1Id.getName());
+            map.put("category2Name", category2Id.getName());
+            map.put("category3Name", category3Id.getName());
+        }
+        PageResult result = new PageResult();
+        result.setTotal(pageInfo.getTotal());
+        result.setRows(list);
+        return result;
+    }
+
+    @Override
+    public Goods findGoodsById(Long id) {
+        try {
+            //SPU
+            Goods goods = goodsMapper.selectByPrimaryKey(id);
+            GoodsDesc goodsDesc = goodsDescMapper.selectByPrimaryKey(id);
+            goods.setGoodsDesc(goodsDesc);
+            //SKU
+            Item item = new Item();
+            item.setGoodsId(goods.getId());
+            List<Item> items = itemMapper.select(item);
+            goods.setItems(items);
+            return goods;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

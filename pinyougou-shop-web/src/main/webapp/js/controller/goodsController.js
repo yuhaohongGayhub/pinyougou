@@ -1,16 +1,13 @@
 /** 定义控制器层 */
-app.controller('goodsController', function ($scope, $controller, baseService, uploadService) {
-
+app.controller('goodsController', function ($scope, $controller, $location, baseService, uploadService) {
         /** 指定继承baseController */
         $controller('baseController', {$scope: $scope});
-
         /** 查询全部 */
         $scope.findAll = function () {
             baseService.sendGet("/goods/findAll").then(function (response) {
                 $scope.dataList = response.data;
             });
         };
-
         $scope.uploadFile = function () {
             uploadService.uploadFile().then(function (response) {
                 if (response.data.status == 200) {
@@ -20,6 +17,42 @@ app.controller('goodsController', function ($scope, $controller, baseService, up
                 }
             });
         };
+
+        /** 根据主键id查询单个商品 */
+        $scope.findOne = function () {
+            var id = $location.search().id;
+            if (id) {
+                baseService.findOne("/goods/findOne", id).then(function (response) {
+                    //获取到商品对象
+                    $scope.goods = response.data;
+                    //富文本编辑内容
+                    editor.html($scope.goods.goodsDesc.introduction);
+                    //图片
+                    $scope.goods.goodsDesc.itemImages = JSON.parse($scope.goods.goodsDesc.itemImages);
+                    //扩展属性
+                    $scope.goods.goodsDesc.customAttributeItems = JSON.parse($scope.goods.goodsDesc.customAttributeItems);
+                    /** 把规格json字符串转化成数组 */
+                    $scope.goods.goodsDesc.specificationItems =
+                        JSON.parse($scope.goods.goodsDesc.specificationItems);
+                    for (var i = 0; i < $scope.goods.items.length; i++) {
+                        $scope.goods.items[i].spec = JSON.parse($scope.goods.items[i].spec);
+                    }
+                });
+            }
+        };
+        $scope.checkAttribute = function ($event, specName, optionName) {
+            //[{"attributeValue":["联通4G","移动4G","电信4G"],"attributeName":"网络"},
+            // {"attributeValue":["64G","128G"],"attributeName":"机身内存"}]"
+            var specificationItems = $scope.goods.goodsDesc.specificationItems;
+            var obj = $scope.searchJsonByKey(specificationItems, 'attributeName', specName)
+            if (obj) {
+                var index = obj['attributeValue'].indexOf(optionName);
+                return index >= 0;
+            } else {
+                return false;
+            }
+        };
+
 
         //------------------- start -----------------------------------
         $scope.goods = {
@@ -143,7 +176,9 @@ app.controller('goodsController', function ($scope, $controller, baseService, up
                     $scope.typeTemplate = typeTemplate;
                     $scope.typeTemplate.brandIds = JSON.parse(typeTemplate.brandIds);
                     //customAttributeItems: "[{\"text\":\"分辨率\"},{\"text\":\"摄像头\"}]"
-                    $scope.goods.goodsDesc.customAttributeItems = JSON.parse(typeTemplate.customAttributeItems);
+                    if (!$location.search().id) {
+                        $scope.goods.goodsDesc.customAttributeItems = JSON.parse(typeTemplate.customAttributeItems);
+                    }
                     //specIds: "[{\"id\":27,\"text\":\"网络\"},{\"id\":32,\"text\":\"机身内存\"}]"
                 });
                 /** 查询该模版对应的规格与规格选项 */
@@ -158,8 +193,6 @@ app.controller('goodsController', function ($scope, $controller, baseService, up
         });
 
         //--------------------------------------------------------
-
-
         $scope.remove_image_entity = function (index) {
             $scope.goods.goodsDesc.itemImages.splice(index, 1);
         }
@@ -170,9 +203,11 @@ app.controller('goodsController', function ($scope, $controller, baseService, up
 
         /** 定义搜索对象 */
         $scope.searchEntity = {};
+        /** 定义商品状态数组 */
+        $scope.status = ['未审核', '已审核', '审核未通过', '关闭'];
         /** 分页查询 */
         $scope.search = function (page, rows) {
-            baseService.findByPage("/goods/findByPage", page,
+            baseService.findByPage("/goods/search", page,
                 rows, $scope.searchEntity)
                 .then(function (response) {
                     $scope.dataList = response.data.rows;

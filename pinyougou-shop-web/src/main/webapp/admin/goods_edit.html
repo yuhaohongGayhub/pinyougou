@@ -3,6 +3,7 @@
 <head>
     <!-- 页面meta -->
     <meta charset="utf-8">
+    <base href="/"/>
     <title>商品编辑</title>
     <link rel="stylesheet" href="/plugins/bootstrap/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="/plugins/adminLTE/css/AdminLTE.css"/>
@@ -30,12 +31,17 @@
                 allowFileManager: true
             });
         });
+
+        /** 配置位置提供者 */
+        app.config(function ($locationProvider) {
+            $locationProvider.html5Mode(true);
+        });
     </script>
 </head>
 
 <body ng-app="pinyougou"
       ng-controller="goodsController"
-      ng-init="findItemCatByParentId(0,'itemCatList1');"
+      ng-init="findItemCatByParentId(0,'itemCatList1');findOne();"
       class="hold-transition skin-red sidebar-mini">
 <!-- 正文区域 -->
 <section class="content">
@@ -52,7 +58,6 @@
             <!--tab头/-->
             <!--tab内容-->
             <div class="tab-content">
-                {{goods.items}}
                 <!--表单内容-->
                 <div class="tab-pane active" id="home">
                     <div class="row data-type">
@@ -211,6 +216,7 @@
                                 <div class="col-md-10 data">
                                     <span ng-repeat="option in spec.options">
                                         <input ng-click="updateSpecAttr($event, spec.text, option.optionName);createItems();"
+                                               ng-checked="checkAttribute($event,spec.text, option.optionName)"
                                                type="checkbox">{{option.optionName}}
                                     </span>
                                 </div>
