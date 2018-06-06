@@ -67,6 +67,11 @@
             <artifactId>pinyougou-sellergoods-interface</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.pinyougou</groupId>
+            <artifactId>pinyougou-content-interfact</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- spring-security -->
         <dependency>
             <groupId>org.springframework.security</groupId>
@@ -75,6 +80,18 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
+        </dependency>
+        <!-- commons-fileupload -->
+        <dependency>
+            <groupId>commons-fileupload</groupId>
+            <artifactId>commons-fileupload</artifactId>
+            <version>1.3.3</version>
+        </dependency>
+        <!--FastDFS-->
+        <dependency>
+            <groupId>org.csource</groupId>
+            <artifactId>fastdfs-client</artifactId>
+            <version>1.25-RELEASE</version>
         </dependency>
     </dependencies>
 

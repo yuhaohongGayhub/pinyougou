@@ -241,4 +241,15 @@ public class Item implements Serializable{
     public void setSeller(String seller) {
         this.seller = seller == null ? null : seller.trim();
     }
+
+    @Override
+    public String toString() {
+        return "Item{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", sellPoint='" + sellPoint + '\'' +
+                ", status='" + status + '\'' +
+                ", brand='" + brand + '\'' +
+                '}';
+    }
 }
