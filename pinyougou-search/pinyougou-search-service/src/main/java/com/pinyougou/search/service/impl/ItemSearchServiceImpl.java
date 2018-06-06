@@ -1,5 +1,6 @@
 package com.pinyougou.search.service.impl;
 
+import com.alibaba.dubbo.config.annotation.Service;
 import com.pinyougou.pojo.SolrItem;
 import com.pinyougou.search.service.ItemSearchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Service(interfaceName = "com.pinyougou.search.service.ItemSearchService")
 public class ItemSearchServiceImpl implements ItemSearchService {
     @Autowired
     private SolrTemplate solrTemplate;
