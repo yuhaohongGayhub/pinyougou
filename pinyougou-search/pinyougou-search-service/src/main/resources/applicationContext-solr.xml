@@ -15,16 +15,16 @@
 
     <!--############## 配置Solr单机版 ##############-->
     <!-- 配置SolrServer -->
-    <!--<solr:solr-server id="solrServer"
-            url="http://192.168.12.131:8088/solr/collection1"/>-->
+    <solr:solr-server id="solrServer"
+            url="http://192.168.12.131:8088/solr/collection1"/>
 
     <!--############## 配置Solr集群版 ##############-->
-    <bean id="solrServer" class="org.apache.solr.client.solrj.impl.CloudSolrServer">
-        <!-- 设置zookeeper的主机与端口 -->
+    <!--<bean id="solrServer" class="org.apache.solr.client.solrj.impl.CloudSolrServer">
+        &lt;!&ndash; 设置zookeeper的主机与端口 &ndash;&gt;
         <constructor-arg value="${zkHost}"/>
-        <!-- 设置默认的索引库集合 -->
+        &lt;!&ndash; 设置默认的索引库集合 &ndash;&gt;
         <property name="defaultCollection" value="${defaultCollection}"/>
-    </bean>
+    </bean>-->
 
     <!-- 配置SolrTemplate，它可以对Solr索引库做CRUD操作 -->
     <bean id="solrTemplate" class="org.springframework.data.solr.core.SolrTemplate">
