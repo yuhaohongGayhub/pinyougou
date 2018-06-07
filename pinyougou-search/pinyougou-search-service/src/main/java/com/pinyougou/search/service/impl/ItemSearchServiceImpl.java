@@ -1,6 +1,7 @@
 package com.pinyougou.search.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.pinyougou.pojo.Brand;
 import com.pinyougou.pojo.SolrItem;
 import com.pinyougou.search.service.ItemSearchService;
 import org.apache.commons.lang3.StringUtils;
@@ -8,19 +9,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.*;
 import org.springframework.data.solr.core.query.result.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.security.Key;
+import java.util.*;
 
 @Service(interfaceName = "com.pinyougou.search.service.ItemSearchService")
 public class ItemSearchServiceImpl implements ItemSearchService {
     @Autowired
     private SolrTemplate solrTemplate;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     public Map<String, Object> search(Map<String, Object> params) {
@@ -45,6 +47,34 @@ public class ItemSearchServiceImpl implements ItemSearchService {
             //按关键字进行搜索
             Criteria criteria = new Criteria("keywords").is(keyword);
             highlightQuery.addCriteria(criteria);
+
+            //分类过滤
+            String category = (String) params.get("category");
+            if (category != null && !category.trim().equals("")) {
+                Criteria categoryCriteria = new Criteria("category").is(category);
+                SimpleFilterQuery categoryFilter = new SimpleFilterQuery();
+                categoryFilter.addCriteria(categoryCriteria);
+                highlightQuery.addFilterQuery(categoryFilter);
+            }
+
+            //品牌过滤
+            String brand = (String) params.get("brand");
+            if (brand != null && !brand.trim().equals("")) {
+                Criteria brandCriteria = new Criteria("brand").is(params.get("brand"));
+                SimpleFilterQuery brandFilter = new SimpleFilterQuery(brandCriteria);
+                highlightQuery.addFilterQuery(brandFilter);
+            }
+
+            //规格选项过滤
+            Map<String, String> specs = (Map<String, String>) params.get("spec");
+            if (specs != null && specs.size() > 0) {
+                Set<Map.Entry<String, String>> entries = specs.entrySet();
+                for (Map.Entry<String, String> entry : entries) {
+                    Criteria specCriteria = new Criteria("spec_" + entry.getKey()).is(entry.getValue());
+                    highlightQuery.addFilterQuery(new SimpleFilterQuery(specCriteria));
+                }
+            }
+
             //########### 执行查询 #############################
             HighlightPage<SolrItem> solrItems = solrTemplate.queryForHighlightPage(highlightQuery, SolrItem.class);
             //获取到高亮的对象集合
@@ -69,6 +99,18 @@ public class ItemSearchServiceImpl implements ItemSearchService {
             //查询分类
             List<String> categoryList = searchCategoryByKeyWords(keyword);
             data.put("categoryList", categoryList);
+
+            if (category != null && !category.trim().equals("")) {
+                Map<String, Object> ret = searchBrandAndSpecList(category);
+                data.putAll(ret);
+            } else {
+                //从缓存中取值
+                if (categoryList != null && categoryList.size() > 0) {
+                    String categoryName = categoryList.get(0);
+                    Map<String, Object> ret = searchBrandAndSpecList(categoryName);
+                    data.putAll(ret);
+                }
+            }
             return data;
         } else {
             SimpleQuery query = new SimpleQuery("*:*");
@@ -78,6 +120,20 @@ public class ItemSearchServiceImpl implements ItemSearchService {
             data.put("rows", content);
             return data;
         }
+    }
+
+    //根据分类名称查询品牌和规格选项数据(Redis)
+    private Map<String, Object> searchBrandAndSpecList(String category) {
+        Map<String, Object> data = new HashMap<>();
+        //通过分类名称获取类型模板Id
+        Long typeId = (Long) redisTemplate.boundHashOps("itemCast").get(category);
+        if (typeId != null && typeId > 0) {
+            List<Brand> brandList = (List<Brand>) redisTemplate.boundHashOps("brandList").get(typeId);
+            data.put("brandList", brandList);
+            List specList = (List) redisTemplate.boundHashOps("specList").get(typeId);
+            data.put("specList", specList);
+        }
+        return data;
     }
 
     //查询所有的分类

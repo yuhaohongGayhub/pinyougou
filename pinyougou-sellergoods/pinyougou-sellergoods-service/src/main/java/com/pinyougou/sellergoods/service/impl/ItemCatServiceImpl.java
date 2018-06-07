@@ -78,7 +78,7 @@ public class ItemCatServiceImpl implements ItemCatService {
         try {
             List<ItemCat> itemCats = itemCatMapper.selectAll();
             for (ItemCat itemCat : itemCats) {
-                redisTemplate.boundHashOps("itemCast").delete(itemCat.getName(), itemCat.getTypeId());
+                redisTemplate.boundHashOps("itemCast").put(itemCat.getName(), itemCat.getTypeId());
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);
