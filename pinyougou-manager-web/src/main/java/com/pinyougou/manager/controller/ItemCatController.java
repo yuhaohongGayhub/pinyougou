@@ -22,9 +22,9 @@ import java.util.Map;
 @RequestMapping("/itemCat")
 public class ItemCatController {
 
-    @Reference
+    @Reference(timeout = 10000)
     private ItemCatService itemCatService;
-    @Reference
+    @Reference(timeout = 10000)
     private TypeTemplateService typeTemplateService;
 
 
@@ -51,7 +51,7 @@ public class ItemCatController {
         try {
             itemCatService.saveItemCat(itemCat);
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
@@ -62,19 +62,30 @@ public class ItemCatController {
         try {
             itemCatService.updateItemCat(itemCat);
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
 
     @GetMapping("/delete")
-    public boolean deleteItemCat(@RequestParam(name = "ids")Long[] ids) {
+    public boolean deleteItemCat(@RequestParam(name = "ids") Long[] ids) {
         try {
             itemCatService.deleteByIds(ids);
             return true;
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
+        }
+        return false;
+    }
+
+    @GetMapping("/updateCache")
+    public boolean updateCache() {
+        try {
+            itemCatService.saveToRedis();
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
         return false;
     }

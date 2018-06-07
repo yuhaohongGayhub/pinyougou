@@ -23,6 +23,18 @@ app.controller('itemCatController', function ($scope, $controller, baseService) 
             });
     };
 
+    /** 更新缓存 */
+    $scope.updateCache = function () {
+        baseService.sendGet("/itemCat/updateCache")
+            .then(function (response) {
+                if (response.data) {
+                    alert("同步缓存成功")
+                } else {
+                    alert("同步缓存失败")
+                }
+            });
+    };
+
     $scope.level = 1;
     /** 点击下一级别搜索 */
     $scope.selectList = function (entity, level) {
@@ -70,7 +82,7 @@ app.controller('itemCatController', function ($scope, $controller, baseService) 
                     if (response.data) {
                         alert("删除成功!");
                         $scope.findItemCatByParentId($scope.parentId);
-                        $scope.ids=[];
+                        $scope.ids = [];
                     } else {
                         alert("删除失败！");
                     }

@@ -70,4 +70,15 @@ public class TypeTemplateController {
         }
         return false;
     }
+
+    @GetMapping("/updateCache")
+    public boolean updateCache() {
+        try {
+            typeTemplateService.saveToRedis();
+            return true;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return false;
+    }
 }

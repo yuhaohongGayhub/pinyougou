@@ -47,5 +47,11 @@
             <artifactId>pinyougou-sellergoods-interface</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- pinyougou-common -->
+        <dependency>
+            <groupId>com.pinyougou</groupId>
+            <artifactId>pinyougou-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

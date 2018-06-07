@@ -9,6 +9,8 @@
 
     <!-- 导入数据访问配置文件 -->
     <import resource="classpath:applicationContext-mapper.xml"/>
+    <!-- 导入redis配置文件 -->
+    <import resource="classpath:applicationContext-redis.xml"/>
     <!-- 配置当前应用的名称 -->
     <dubbo:application name="pinyougou-sellergoods-service"/>
     <!-- 配置zookeeper作为注册中心，注册服务地址 -->

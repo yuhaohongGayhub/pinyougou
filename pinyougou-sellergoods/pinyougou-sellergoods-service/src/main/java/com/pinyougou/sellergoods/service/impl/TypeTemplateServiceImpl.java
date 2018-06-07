@@ -5,10 +5,12 @@ import com.github.pagehelper.ISelect;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.pinyougou.common.pojo.PageResult;
+import com.pinyougou.mapper.SpecificationMapper;
 import com.pinyougou.mapper.SpecificationOptionMapper;
 import com.pinyougou.pojo.SpecificationOption;
 import com.pinyougou.pojo.TypeTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -38,6 +40,8 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
     private TypeTemplateMapper typeTemplateMapper;
     @Autowired
     private SpecificationOptionMapper specificationOptionMapper;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     public PageResult findByPage(TypeTemplate typeTemplate, Integer pageNum, Integer pageSize) {
@@ -114,5 +118,23 @@ public class TypeTemplateServiceImpl implements TypeTemplateService {
             map.put("options", options);
         }
         return maps;
+    }
+
+    @Override
+    public void saveToRedis() {
+        try {
+            List<TypeTemplate> typeTemplates = typeTemplateMapper.selectAll();
+            for (TypeTemplate typeTemplate : typeTemplates) {
+                //获取品牌
+                String brandIds = typeTemplate.getBrandIds();
+                List<Map> brandList = JSON.parseArray(brandIds, Map.class);
+                redisTemplate.boundHashOps("brandList").put(typeTemplate.getId(), brandList);
+                //规格
+                List<Map> typeTemplateList = findSpecByTemplateId(typeTemplate.getId());
+                redisTemplate.boundHashOps("specList").put(typeTemplate.getId(), typeTemplateList);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

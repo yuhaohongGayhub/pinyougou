@@ -28,4 +28,6 @@ public interface TypeTemplateService {
     TypeTemplate findOne(Long id);
 
     List<Map> findSpecByTemplateId(Long id);
+
+    void saveToRedis();
 }

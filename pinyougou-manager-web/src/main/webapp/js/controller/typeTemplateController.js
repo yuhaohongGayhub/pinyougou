@@ -11,6 +11,18 @@ app.controller('typeTemplateController', function ($scope, $controller, baseServ
         });
     };
 
+    /** 更新缓存 */
+    $scope.updateCache = function () {
+        baseService.sendGet("/typeTemplate/updateCache")
+            .then(function (response) {
+                if (response.data) {
+                    alert("同步缓存成功")
+                } else {
+                    alert("同步缓存失败")
+                }
+            });
+    }
+
     /** 定义搜索对象 */
     $scope.searchEntity = {};
     /** 分页查询 */

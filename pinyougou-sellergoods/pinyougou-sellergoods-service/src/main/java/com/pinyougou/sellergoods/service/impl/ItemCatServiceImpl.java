@@ -2,6 +2,8 @@ package com.pinyougou.sellergoods.service.impl;
 
 import com.pinyougou.pojo.ItemCat;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.dubbo.config.annotation.Service;
@@ -27,6 +29,8 @@ public class ItemCatServiceImpl implements ItemCatService {
      */
     @Autowired
     private ItemCatMapper itemCatMapper;
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     @Override
     public List<ItemCat> findItemCatByParentId(Long parentId) {
@@ -63,6 +67,18 @@ public class ItemCatServiceImpl implements ItemCatService {
         try {
             for (Long id : ids) {
                 itemCatMapper.deleteByPrimaryKey(id);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public void saveToRedis() {
+        try {
+            List<ItemCat> itemCats = itemCatMapper.selectAll();
+            for (ItemCat itemCat : itemCats) {
+                redisTemplate.boundHashOps("itemCast").delete(itemCat.getName(), itemCat.getTypeId());
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);

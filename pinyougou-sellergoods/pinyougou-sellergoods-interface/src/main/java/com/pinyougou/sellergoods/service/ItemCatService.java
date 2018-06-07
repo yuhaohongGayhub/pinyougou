@@ -16,4 +16,10 @@ public interface ItemCatService {
     void updateItemCat(ItemCat itemCat);
 
     void deleteByIds(Long[] ids);
+
+    /**
+     * 添加商品分类数据到Redis中
+     */
+    void saveToRedis();
+
 }
