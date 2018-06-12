@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.*;
@@ -27,6 +28,16 @@ public class ItemSearchServiceImpl implements ItemSearchService {
     @Override
     public Map<String, Object> search(Map<String, Object> params) {
         Map<String, Object> data = new HashMap<>();
+        //分页选项
+        Integer curPage = (Integer) params.get("curPage");
+        if (curPage == null || curPage < 1) {
+            curPage = 1;
+        }
+        Integer pageSize = (Integer) params.get("pageSize");
+        if (pageSize == null || pageSize <= 0) {
+            pageSize = 20;
+        }
+
         //获取关键字
         String keyword = (String) params.get("keywords");
         // 如果关键字不为空，则高亮查询
@@ -75,6 +86,34 @@ public class ItemSearchServiceImpl implements ItemSearchService {
                 }
             }
 
+            //价格区间过滤
+            String priceStr = (String) params.get("price");
+            if (priceStr != null && !priceStr.trim().equals("")) {
+                String[] prices = priceStr.split("-");
+                if (!"0".equals(prices[0])) {
+                    Criteria firstPriceCriteria = new Criteria("price").greaterThanEqual(prices[0]);
+                    SimpleFilterQuery priceFilter = new SimpleFilterQuery();
+                    priceFilter.addCriteria(firstPriceCriteria);
+                    highlightQuery.addCriteria(firstPriceCriteria);
+                }
+                if (!"*".equals(prices[1])) {
+                    Criteria lastPriceCriteria = new Criteria("price").lessThanEqual(prices[1]);
+                    SimpleFilterQuery priceFilter = new SimpleFilterQuery();
+                    priceFilter.addCriteria(lastPriceCriteria);
+                    highlightQuery.addCriteria(lastPriceCriteria);
+                }
+            }
+            //分页
+            highlightQuery.setOffset((curPage - 1) * pageSize);
+            highlightQuery.setRows(pageSize);
+
+            String sortField = (String) params.get("sortField");
+            String sortDir = (String) params.get("sortDir");
+            if (sortField != null && !sortField.trim().equals("")) {
+                Sort sort = new Sort(sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC, sortField);
+                highlightQuery.addSort(sort);
+            }
+
             //########### 执行查询 #############################
             HighlightPage<SolrItem> solrItems = solrTemplate.queryForHighlightPage(highlightQuery, SolrItem.class);
             //获取到高亮的对象集合
@@ -111,13 +150,26 @@ public class ItemSearchServiceImpl implements ItemSearchService {
                     data.putAll(ret);
                 }
             }
+
+            //分页值
+            long totalElements = solrItems.getTotalElements();
+            int totalPages = solrItems.getTotalPages();
+            data.put("totalPages", totalPages);
+            data.put("total", totalElements);
             return data;
         } else {
             SimpleQuery query = new SimpleQuery("*:*");
+            query.setOffset((curPage - 1) * pageSize);
+            query.setRows(pageSize);
             ScoredPage<SolrItem> solrItems = solrTemplate.queryForPage(query, SolrItem.class);
             List<SolrItem> content = solrItems.getContent();
             System.out.println(content);
             data.put("rows", content);
+
+            int totalPages = solrItems.getTotalPages();
+            long totalElements = solrItems.getTotalElements();
+            data.put("totalPages", totalPages);
+            data.put("total", totalElements);
             return data;
         }
     }
@@ -160,10 +212,25 @@ public class ItemSearchServiceImpl implements ItemSearchService {
 
     public static void main(String[] args) {
         ApplicationContext container = new ClassPathXmlApplicationContext("classpath:applicationContext-solr.xml");
-        SolrTemplate template = container.getBean(SolrTemplate.class);
-        Query query = new SimpleQuery("*:*");
-        ScoredPage<SolrItem> solrItems = template.queryForPage(query, SolrItem.class);
-        List<SolrItem> items = solrItems.getContent();
+        SolrTemplate solrTemplate = container.getBean(SolrTemplate.class);
+
+        HighlightQuery highlightQuery = new SimpleHighlightQuery();
+        //############## 创建高亮选项对象 ############################
+        HighlightOptions highlightOptions = new HighlightOptions();
+        //设置需要高亮的字段
+        highlightOptions.addField("title");
+        //设置前缀
+        highlightOptions.setSimplePrefix("<font color='red'>");
+        //设置后缀
+        highlightOptions.setSimplePostfix("</font>");
+        //设置高亮先选项对象
+        highlightQuery.setHighlightOptions(highlightOptions);
+        //#########################################################
+        //按关键字进行搜索
+        Criteria criteria = new Criteria("keywords").is("小米");
+        highlightQuery.addCriteria(criteria);
+        HighlightPage<SolrItem> highlightPage = solrTemplate.queryForHighlightPage(highlightQuery, SolrItem.class);
+        List<SolrItem> items = highlightPage.getContent();
         for (SolrItem item : items) {
             System.out.println(item);
         }
