@@ -15,8 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.dubbo.config.annotation.Service;
 import com.pinyougou.sellergoods.service.GoodsService;
+import tk.mybatis.mapper.entity.Example;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -134,5 +136,45 @@ public class GoodsServiceImpl implements GoodsService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Map<String, Object> getGoods(Long goodsId) {
+        Map<String, Object> dataModel = new HashMap<>();
+
+        //搜索KPU表
+        Goods goods = goodsMapper.selectByPrimaryKey(goodsId);
+        dataModel.put("goods", goods);
+        //搜索商品描述表
+        GoodsDesc goodsDesc = goodsDescMapper.selectByPrimaryKey(goodsId);
+        dataModel.put("goodsDesc", goodsDesc);
+
+        /** 商品分类 */
+        if (goods != null && goods.getCategory3Id() != null) {
+            String itemCat1 = itemCatMapper
+                    .selectByPrimaryKey(goods.getCategory1Id()).getName();
+            String itemCat2 = itemCatMapper
+                    .selectByPrimaryKey(goods.getCategory2Id()).getName();
+            String itemCat3 = itemCatMapper
+                    .selectByPrimaryKey(goods.getCategory3Id()).getName();
+            dataModel.put("itemCat1", itemCat1);
+            dataModel.put("itemCat2", itemCat2);
+            dataModel.put("itemCat3", itemCat3);
+        }
+
+        /** 查询SKU数据 */
+        Example example = new Example(Item.class);
+        Example.Criteria criteria = example.createCriteria();
+        /** 状态为: 审核 */
+        criteria.andEqualTo("status", "1");
+        /** 条件: SPU ID */
+        criteria.andEqualTo("goodsId", goodsId);
+        /** 按是否默认降序(保证第一个为默认) */
+        example.orderBy("isDefault").desc();
+        /** 根据条件查询SKU商品数据 */
+        List<Item> itemList = itemMapper.selectByExample(example);
+        dataModel.put("itemList", JSON.toJSONString(itemList));
+
+        return dataModel;
     }
 }

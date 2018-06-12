@@ -19,6 +19,7 @@
         <module>pinyougou-solr-util</module>
         <module>pinyougou-search-web</module>
         <module>pinyougou-search</module>
+        <module>pinyougou-item-web</module>
     </modules>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
